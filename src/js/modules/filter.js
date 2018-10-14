@@ -1,651 +1,651 @@
-var Filter = function(table){
+// var Filter = function(table){
 
-	this.table = table; //hold Tabulator object
+// 	this.table = table; //hold Tabulator object
 
-	this.filterList = []; //hold filter list
-	this.headerFilters = {}; //hold column filters
-	this.headerFilterElements = []; //hold header filter elements for manipulation
+// 	this.filterList = []; //hold filter list
+// 	this.headerFilters = {}; //hold column filters
+// 	this.headerFilterElements = []; //hold header filter elements for manipulation
 
-	this.changed = false; //has filtering changed since last render
-};
-
-
-//initialize column header filter
-Filter.prototype.initializeColumn = function(column, value){
-	var self = this,
-	field = column.getField(),
-	prevSuccess, params;
+// 	this.changed = false; //has filtering changed since last render
+// };
 
 
-	//handle successfull value change
-	function success(value){
-		var filterType = (column.modules.filter.tagType == "input" && column.modules.filter.attrType == "text") || column.modules.filter.tagType == "textarea" ? "partial" : "match",
-		type = "",
-		filterFunc;
+// //initialize column header filter
+// Filter.prototype.initializeColumn = function(column, value){
+// 	var self = this,
+// 	field = column.getField(),
+// 	prevSuccess, params;
 
-		if(typeof prevSuccess === "undefined" || prevSuccess !== value){
 
-			prevSuccess = value;
+// 	//handle successfull value change
+// 	function success(value){
+// 		var filterType = (column.modules.filter.tagType == "input" && column.modules.filter.attrType == "text") || column.modules.filter.tagType == "textarea" ? "partial" : "match",
+// 		type = "",
+// 		filterFunc;
 
-			if(!column.modules.filter.emptyFunc(value)){
-				column.modules.filter.value = value;
+// 		if(typeof prevSuccess === "undefined" || prevSuccess !== value){
 
-				switch(typeof column.definition.headerFilterFunc){
-					case "string":
-					if(self.filters[column.definition.headerFilterFunc]){
-						type = column.definition.headerFilterFunc;
-						filterFunc = function(data){
-							return self.filters[column.definition.headerFilterFunc](value, column.getFieldValue(data));
-						};
-					}else{
-						console.warn("Header Filter Error - Matching filter function not found: ", column.definition.headerFilterFunc);
-					}
-					break;
+// 			prevSuccess = value;
 
-					case "function":
-					filterFunc = function(data){
-						var params = column.definition.headerFilterFuncParams || {};
-						var fieldVal = column.getFieldValue(data);
+// 			if(!column.modules.filter.emptyFunc(value)){
+// 				column.modules.filter.value = value;
 
-						params = typeof params === "function" ? params(value, fieldVal, data) : params;
+// 				switch(typeof column.definition.headerFilterFunc){
+// 					case "string":
+// 					if(self.filters[column.definition.headerFilterFunc]){
+// 						type = column.definition.headerFilterFunc;
+// 						filterFunc = function(data){
+// 							return self.filters[column.definition.headerFilterFunc](value, column.getFieldValue(data));
+// 						};
+// 					}else{
+// 						console.warn("Header Filter Error - Matching filter function not found: ", column.definition.headerFilterFunc);
+// 					}
+// 					break;
 
-						return column.definition.headerFilterFunc(value, fieldVal, data, params);
-					};
+// 					case "function":
+// 					filterFunc = function(data){
+// 						var params = column.definition.headerFilterFuncParams || {};
+// 						var fieldVal = column.getFieldValue(data);
 
-					type = filterFunc;
-					break;
-				}
+// 						params = typeof params === "function" ? params(value, fieldVal, data) : params;
 
-				if(!filterFunc){
-					switch(filterType){
-						case "partial":
-						filterFunc = function(data){
-							return String(column.getFieldValue(data)).toLowerCase().indexOf(String(value).toLowerCase()) > -1;
-						};
-						type = "like";
-						break;
+// 						return column.definition.headerFilterFunc(value, fieldVal, data, params);
+// 					};
 
-						default:
-						filterFunc = function(data){
-							return column.getFieldValue(data) == value;
-						};
-						type = "=";
-					}
-				}
+// 					type = filterFunc;
+// 					break;
+// 				}
 
-				self.headerFilters[field] = {value:value, func:filterFunc, type:type};
+// 				if(!filterFunc){
+// 					switch(filterType){
+// 						case "partial":
+// 						filterFunc = function(data){
+// 							return String(column.getFieldValue(data)).toLowerCase().indexOf(String(value).toLowerCase()) > -1;
+// 						};
+// 						type = "like";
+// 						break;
 
-			}else{
-				delete self.headerFilters[field];
-			}
+// 						default:
+// 						filterFunc = function(data){
+// 							return column.getFieldValue(data) == value;
+// 						};
+// 						type = "=";
+// 					}
+// 				}
 
-			self.changed = true;
+// 				self.headerFilters[field] = {value:value, func:filterFunc, type:type};
 
-			self.table.rowManager.filterRefresh();
-		}
-	}
+// 			}else{
+// 				delete self.headerFilters[field];
+// 			}
 
-	column.modules.filter = {
-		success:success,
-		attrType:false,
-		tagType:false,
-		emptyFunc:false,
-	};
+// 			self.changed = true;
 
-	this.generateHeaderFilterElement(column);
-};
+// 			self.table.rowManager.filterRefresh();
+// 		}
+// 	}
 
-Filter.prototype.generateHeaderFilterElement = function(column, initialValue){
-	var self = this,
-	success = column.modules.filter.success,
-	field = column.getField(),
-	filterElement, editor, editorElement, cellWrapper, typingTimer, searchTrigger, params;
+// 	column.modules.filter = {
+// 		success:success,
+// 		attrType:false,
+// 		tagType:false,
+// 		emptyFunc:false,
+// 	};
 
-	//handle aborted edit
-	function cancel(){}
+// 	this.generateHeaderFilterElement(column);
+// };
 
-	if(column.modules.filter.headerElement && column.modules.filter.headerElement.parentNode){
-		column.modules.filter.headerElement.parentNode.removeChild(column.modules.filter.headerElement);
-	}
+// Filter.prototype.generateHeaderFilterElement = function(column, initialValue){
+// 	var self = this,
+// 	success = column.modules.filter.success,
+// 	field = column.getField(),
+// 	filterElement, editor, editorElement, cellWrapper, typingTimer, searchTrigger, params;
 
-	if(field){
+// 	//handle aborted edit
+// 	function cancel(){}
 
-		//set empty value function
-		column.modules.filter.emptyFunc = column.definition.headerFilterEmptyCheck || function(value){
-			return !value && value !== "0";
-		};
+// 	if(column.modules.filter.headerElement && column.modules.filter.headerElement.parentNode){
+// 		column.modules.filter.headerElement.parentNode.removeChild(column.modules.filter.headerElement);
+// 	}
 
-		filterElement = document.createElement("div");
-		filterElement.classList.add("tabulator-header-filter");
+// 	if(field){
 
-		//set column editor
-		switch(typeof column.definition.headerFilter){
-			case "string":
-			if(self.table.modules.edit.editors[column.definition.headerFilter]){
-				editor = self.table.modules.edit.editors[column.definition.headerFilter];
+// 		//set empty value function
+// 		column.modules.filter.emptyFunc = column.definition.headerFilterEmptyCheck || function(value){
+// 			return !value && value !== "0";
+// 		};
 
-				if((column.definition.headerFilter === "tick" || column.definition.headerFilter === "tickCross") && !column.definition.headerFilterEmptyCheck){
-					column.modules.filter.emptyFunc = function(value){
-						return value !== true && value !== false;
-					};
-				}
-			}else{
-				console.warn("Filter Error - Cannot build header filter, No such editor found: ", column.definition.editor);
-			}
-			break;
+// 		filterElement = document.createElement("div");
+// 		filterElement.classList.add("tabulator-header-filter");
 
-			case "function":
-			editor = column.definition.headerFilter;
-			break;
+// 		//set column editor
+// 		switch(typeof column.definition.headerFilter){
+// 			case "string":
+// 			if(self.table.modules.edit.editors[column.definition.headerFilter]){
+// 				editor = self.table.modules.edit.editors[column.definition.headerFilter];
 
-			case "boolean":
-			if(column.modules.edit && column.modules.edit.editor){
-				editor = column.modules.edit.editor;
-			}else{
-				if(column.definition.formatter && self.table.modules.edit.editors[column.definition.formatter]){
-					editor = self.table.modules.edit.editors[column.definition.formatter];
+// 				if((column.definition.headerFilter === "tick" || column.definition.headerFilter === "tickCross") && !column.definition.headerFilterEmptyCheck){
+// 					column.modules.filter.emptyFunc = function(value){
+// 						return value !== true && value !== false;
+// 					};
+// 				}
+// 			}else{
+// 				console.warn("Filter Error - Cannot build header filter, No such editor found: ", column.definition.editor);
+// 			}
+// 			break;
 
-					if((column.definition.formatter === "tick" || column.definition.formatter === "tickCross") && !column.definition.headerFilterEmptyCheck){
-						column.modules.filter.emptyFunc = function(value){
-							return value !== true && value !== false;
-						};
-					}
-				}else{
-					editor = self.table.modules.edit.editors["input"];
-				}
-			}
-			break;
-		}
+// 			case "function":
+// 			editor = column.definition.headerFilter;
+// 			break;
 
-		if(editor){
+// 			case "boolean":
+// 			if(column.modules.edit && column.modules.edit.editor){
+// 				editor = column.modules.edit.editor;
+// 			}else{
+// 				if(column.definition.formatter && self.table.modules.edit.editors[column.definition.formatter]){
+// 					editor = self.table.modules.edit.editors[column.definition.formatter];
 
-			cellWrapper = {
-				getValue:function(){
-					return typeof initialValue !== "undefined" ? initialValue : "";
-				},
-				getField:function(){
-					return column.definition.field;
-				},
-				getElement:function(){
-					return filterElement;
-				},
-				getRow:function(){
-					return {
-						normalizeHeight:function(){
+// 					if((column.definition.formatter === "tick" || column.definition.formatter === "tickCross") && !column.definition.headerFilterEmptyCheck){
+// 						column.modules.filter.emptyFunc = function(value){
+// 							return value !== true && value !== false;
+// 						};
+// 					}
+// 				}else{
+// 					editor = self.table.modules.edit.editors["input"];
+// 				}
+// 			}
+// 			break;
+// 		}
 
-						}
-					};
-				}
-			};
+// 		if(editor){
 
-			params = column.definition.headerFilterParams || {};
+// 			cellWrapper = {
+// 				getValue:function(){
+// 					return typeof initialValue !== "undefined" ? initialValue : "";
+// 				},
+// 				getField:function(){
+// 					return column.definition.field;
+// 				},
+// 				getElement:function(){
+// 					return filterElement;
+// 				},
+// 				getRow:function(){
+// 					return {
+// 						normalizeHeight:function(){
 
-			params = typeof params === "function" ? params.call(self.table) : params;
+// 						}
+// 					};
+// 				}
+// 			};
 
-			editorElement = editor.call(self, cellWrapper, function(){}, success, cancel, params);
+// 			params = column.definition.headerFilterParams || {};
 
-			//set Placeholder Text
-			if(field){
-				self.table.modules.localize.bind("headerFilters|columns|" + column.definition.field, function(value){
-					editorElement.setAttribute("placeholder", typeof value !== "undefined" && value ? value : self.table.modules.localize.getText("headerFilters|default"));
-				});
-			}else{
-				self.table.modules.localize.bind("headerFilters|default", function(value){
-					editorElement.setAttribute("placeholder", typeof self.column.definition.headerFilterPlaceholder !== "undefined" && self.column.definition.headerFilterPlaceholder ? self.column.definition.headerFilterPlaceholder : value);
-				});
-			}
+// 			params = typeof params === "function" ? params.call(self.table) : params;
 
-			//focus on element on click
-			editorElement.addEventListener("click", function(e){
-				e.stopPropagation();
-				editorElement.focus();
-			});
+// 			editorElement = editor.call(self, cellWrapper, function(){}, success, cancel, params);
 
-			//live update filters as user types
-			typingTimer = false;
-
-			searchTrigger = function(e){
-				if(typingTimer){
-					clearTimeout(typingTimer);
-				}
-
-				typingTimer = setTimeout(function(){
-					success(editorElement.value);
-				},300);
-			};
-
-			editorElement.addEventListener("keyup", searchTrigger);
-			editorElement.addEventListener("search", searchTrigger);
-
-			column.modules.filter.headerElement = editorElement;
-
-			//update number filtered columns on change
-
-// 			column.modules.filter.attrType = editorElement.hasAttribute("type") ? editorElement.getAttribute("type").toLowerCase() : "" ;
-// 			if(column.modules.filter.attrType == "number"){
-// 				editorElement.addEventListener("change", function(e){
-// 					success(editorElement.value);
+// 			//set Placeholder Text
+// 			if(field){
+// 				self.table.modules.localize.bind("headerFilters|columns|" + column.definition.field, function(value){
+// 					editorElement.setAttribute("placeholder", typeof value !== "undefined" && value ? value : self.table.modules.localize.getText("headerFilters|default"));
+// 				});
+// 			}else{
+// 				self.table.modules.localize.bind("headerFilters|default", function(value){
+// 					editorElement.setAttribute("placeholder", typeof self.column.definition.headerFilterPlaceholder !== "undefined" && self.column.definition.headerFilterPlaceholder ? self.column.definition.headerFilterPlaceholder : value);
 // 				});
 // 			}
 
-			//change text inputs to search inputs to allow for clearing of field
-			if(column.modules.filter.attrType == "text" && this.table.browser !== "ie"){
-				editorElement.setAttribute("type", "search");
-				// editorElement.off("change blur"); //prevent blur from triggering filter and preventing selection click
-			}
+// 			//focus on element on click
+// 			editorElement.addEventListener("click", function(e){
+// 				e.stopPropagation();
+// 				editorElement.focus();
+// 			});
 
-			//prevent input and select elements from propegating click to column sorters etc
-			column.modules.filter.tagType = editorElement.tagName.toLowerCase()
-			if(column.modules.filter.tagType == "input" || column.modules.filter.tagType == "select" || column.modules.filter.tagType == "textarea"){
-				editorElement.addEventListener("mousedown",function(e){
-					e.stopPropagation();
-				});
-			}
+// 			//live update filters as user types
+// 			typingTimer = false;
 
-			filterElement.appendChild(editorElement);
+// 			searchTrigger = function(e){
+// 				if(typingTimer){
+// 					clearTimeout(typingTimer);
+// 				}
 
-			column.contentElement.appendChild(filterElement);
+// 				typingTimer = setTimeout(function(){
+// 					success(editorElement.value);
+// 				},300);
+// 			};
 
-			self.headerFilterElements.push(editorElement);
-		}
-	}else{
-		console.warn("Filter Error - Cannot add header filter, column has no field set:", column.definition.title);
-	}
+// 			editorElement.addEventListener("keyup", searchTrigger);
+// 			editorElement.addEventListener("search", searchTrigger);
 
-}
+// 			column.modules.filter.headerElement = editorElement;
 
-//hide all header filter elements (used to ensure correct column widths in "fitData" layout mode)
-Filter.prototype.hideHeaderFilterElements = function(){
-	this.headerFilterElements.forEach(function(element){
-		element.style.display = 'none';
-	});
-};
+// 			//update number filtered columns on change
 
-//show all header filter elements (used to ensure correct column widths in "fitData" layout mode)
-Filter.prototype.showHeaderFilterElements = function(){
-	this.headerFilterElements.forEach(function(element){
-		element.style.display = '';
-	});
-};
+// // 			column.modules.filter.attrType = editorElement.hasAttribute("type") ? editorElement.getAttribute("type").toLowerCase() : "" ;
+// // 			if(column.modules.filter.attrType == "number"){
+// // 				editorElement.addEventListener("change", function(e){
+// // 					success(editorElement.value);
+// // 				});
+// // 			}
 
+// 			//change text inputs to search inputs to allow for clearing of field
+// 			if(column.modules.filter.attrType == "text" && this.table.browser !== "ie"){
+// 				editorElement.setAttribute("type", "search");
+// 				// editorElement.off("change blur"); //prevent blur from triggering filter and preventing selection click
+// 			}
 
-//programatically set value of header filter
-Filter.prototype.setHeaderFilterFocus = function(column){
-	if(column.modules.filter && column.modules.filter.headerElement){
-		column.modules.filter.headerElement.focus();
-	}else{
-		console.warn("Column Filter Focus Error - No header filter set on column:", column.getField());
-	}
-};
+// 			//prevent input and select elements from propegating click to column sorters etc
+// 			column.modules.filter.tagType = editorElement.tagName.toLowerCase()
+// 			if(column.modules.filter.tagType == "input" || column.modules.filter.tagType == "select" || column.modules.filter.tagType == "textarea"){
+// 				editorElement.addEventListener("mousedown",function(e){
+// 					e.stopPropagation();
+// 				});
+// 			}
 
-//programatically set value of header filter
-Filter.prototype.setHeaderFilterValue = function(column, value){
-	if (column){
-		if(column.modules.filter && column.modules.filter.headerElement){
-			this.generateHeaderFilterElement(column, value);
-			column.modules.filter.success(value);
-		}else{
-			console.warn("Column Filter Error - No header filter set on column:", column.getField());
-		}
-	}
-};
+// 			filterElement.appendChild(editorElement);
 
-Filter.prototype.reloadHeaderFilter = function(column){
-	if (column){
-		if(column.modules.filter && column.modules.filter.headerElement){
-			this.generateHeaderFilterElement(column, column.modules.filter.value);
-		}else{
-			console.warn("Column Filter Error - No header filter set on column:", column.getField());
-		}
-	}
-}
+// 			column.contentElement.appendChild(filterElement);
 
-//check if the filters has changed since last use
-Filter.prototype.hasChanged = function(){
-	var changed = this.changed;
-	this.changed = false;
-	return changed;
-};
+// 			self.headerFilterElements.push(editorElement);
+// 		}
+// 	}else{
+// 		console.warn("Filter Error - Cannot add header filter, column has no field set:", column.definition.title);
+// 	}
 
-//set standard filters
-Filter.prototype.setFilter = function(field, type, value){
-	var self = this;
+// }
 
-	self.filterList = [];
+// //hide all header filter elements (used to ensure correct column widths in "fitData" layout mode)
+// Filter.prototype.hideHeaderFilterElements = function(){
+// 	this.headerFilterElements.forEach(function(element){
+// 		element.style.display = 'none';
+// 	});
+// };
 
-	if(!Array.isArray(field)){
-		field = [{field:field, type:type, value:value}];
-	}
-
-	self.addFilter(field);
-
-};
-
-//add filter to array
-Filter.prototype.addFilter = function(field, type, value){
-	var self = this;
-
-	if(!Array.isArray(field)){
-		field = [{field:field, type:type, value:value}];
-	}
-
-	field.forEach(function(filter){
-
-		filter = self.findFilter(filter);
-
-		if(filter){
-			self.filterList.push(filter);
-
-			self.changed = true;
-		}
-	});
-
-	if(this.table.options.persistentFilter && this.table.modExists("persistence", true)){
-		this.table.modules.persistence.save("filter");
-	}
-
-};
-
-Filter.prototype.findFilter = function(filter){
-	var self = this,
-	column;
-
-	if(Array.isArray(filter)){
-		return this.findSubFilters(filter);
-	}
+// //show all header filter elements (used to ensure correct column widths in "fitData" layout mode)
+// Filter.prototype.showHeaderFilterElements = function(){
+// 	this.headerFilterElements.forEach(function(element){
+// 		element.style.display = '';
+// 	});
+// };
 
 
-	var filterFunc = false;
+// //programatically set value of header filter
+// Filter.prototype.setHeaderFilterFocus = function(column){
+// 	if(column.modules.filter && column.modules.filter.headerElement){
+// 		column.modules.filter.headerElement.focus();
+// 	}else{
+// 		console.warn("Column Filter Focus Error - No header filter set on column:", column.getField());
+// 	}
+// };
 
-	if(typeof filter.field == "function"){
-		filterFunc = function(data){
-			return filter.field(data, filter.type || {})// pass params to custom filter function
-		}
-	}else{
+// //programatically set value of header filter
+// Filter.prototype.setHeaderFilterValue = function(column, value){
+// 	if (column){
+// 		if(column.modules.filter && column.modules.filter.headerElement){
+// 			this.generateHeaderFilterElement(column, value);
+// 			column.modules.filter.success(value);
+// 		}else{
+// 			console.warn("Column Filter Error - No header filter set on column:", column.getField());
+// 		}
+// 	}
+// };
 
-		if(self.filters[filter.type]){
+// Filter.prototype.reloadHeaderFilter = function(column){
+// 	if (column){
+// 		if(column.modules.filter && column.modules.filter.headerElement){
+// 			this.generateHeaderFilterElement(column, column.modules.filter.value);
+// 		}else{
+// 			console.warn("Column Filter Error - No header filter set on column:", column.getField());
+// 		}
+// 	}
+// }
 
-			column = self.table.columnManager.getColumnByField(filter.field);
+// //check if the filters has changed since last use
+// Filter.prototype.hasChanged = function(){
+// 	var changed = this.changed;
+// 	this.changed = false;
+// 	return changed;
+// };
 
-			if(column){
-				filterFunc = function(data){
-					return self.filters[filter.type](filter.value, column.getFieldValue(data));
-				}
-			}else{
-				filterFunc = function(data){
-					return self.filters[filter.type](filter.value, data[filter.field]);
-				}
-			}
+// //set standard filters
+// Filter.prototype.setFilter = function(field, type, value){
+// 	var self = this;
+
+// 	self.filterList = [];
+
+// 	if(!Array.isArray(field)){
+// 		field = [{field:field, type:type, value:value}];
+// 	}
+
+// 	self.addFilter(field);
+
+// };
+
+// //add filter to array
+// Filter.prototype.addFilter = function(field, type, value){
+// 	var self = this;
+
+// 	if(!Array.isArray(field)){
+// 		field = [{field:field, type:type, value:value}];
+// 	}
+
+// 	field.forEach(function(filter){
+
+// 		filter = self.findFilter(filter);
+
+// 		if(filter){
+// 			self.filterList.push(filter);
+
+// 			self.changed = true;
+// 		}
+// 	});
+
+// 	if(this.table.options.persistentFilter && this.table.modExists("persistence", true)){
+// 		this.table.modules.persistence.save("filter");
+// 	}
+
+// };
+
+// Filter.prototype.findFilter = function(filter){
+// 	var self = this,
+// 	column;
+
+// 	if(Array.isArray(filter)){
+// 		return this.findSubFilters(filter);
+// 	}
 
 
-		}else{
-			console.warn("Filter Error - No such filter type found, ignoring: ", filter.type);
-		}
-	}
+// 	var filterFunc = false;
+
+// 	if(typeof filter.field == "function"){
+// 		filterFunc = function(data){
+// 			return filter.field(data, filter.type || {})// pass params to custom filter function
+// 		}
+// 	}else{
+
+// 		if(self.filters[filter.type]){
+
+// 			column = self.table.columnManager.getColumnByField(filter.field);
+
+// 			if(column){
+// 				filterFunc = function(data){
+// 					return self.filters[filter.type](filter.value, column.getFieldValue(data));
+// 				}
+// 			}else{
+// 				filterFunc = function(data){
+// 					return self.filters[filter.type](filter.value, data[filter.field]);
+// 				}
+// 			}
 
 
-	filter.func = filterFunc;
+// 		}else{
+// 			console.warn("Filter Error - No such filter type found, ignoring: ", filter.type);
+// 		}
+// 	}
+
+
+// 	filter.func = filterFunc;
 
 
 
-	return filter.func ? filter : false;
-};
+// 	return filter.func ? filter : false;
+// };
 
-Filter.prototype.findSubFilters = function(filters){
-	var self = this,
-	output = [];
-
-	filters.forEach(function(filter){
-		filter = self.findFilter(filter);
-
-		if(filter){
-			output.push(filter);
-		}
-	});
-
-	return output.length ? output : false;
-}
-
-
-//get all filters
-Filter.prototype.getFilters = function(all, ajax){
-	var self = this,
-	output = [];
-
-	if(all){
-		output = self.getHeaderFilters();
-	}
-
-	self.filterList.forEach(function(filter){
-		output.push({field:filter.field, type:filter.type, value:filter.value});
-	});
-
-	if(ajax){
-		output.forEach(function(item){
-			if(typeof item.type == "function"){
-				item.type = "function";
-			}
-		})
-	}
-
-	return output;
-};
-
-//get all filters
-// Filter.prototype.getHeaderFilters = function(){
+// Filter.prototype.findSubFilters = function(filters){
 // 	var self = this,
 // 	output = [];
 
-// 	for(var key in this.headerFilters){
-// 		output.push({field:key, type:this.headerFilters[key].type, value:this.headerFilters[key].value});
+// 	filters.forEach(function(filter){
+// 		filter = self.findFilter(filter);
+
+// 		if(filter){
+// 			output.push(filter);
+// 		}
+// 	});
+
+// 	return output.length ? output : false;
+// }
+
+
+// //get all filters
+// Filter.prototype.getFilters = function(all, ajax){
+// 	var self = this,
+// 	output = [];
+
+// 	if(all){
+// 		output = self.getHeaderFilters();
+// 	}
+
+// 	self.filterList.forEach(function(filter){
+// 		output.push({field:filter.field, type:filter.type, value:filter.value});
+// 	});
+
+// 	if(ajax){
+// 		output.forEach(function(item){
+// 			if(typeof item.type == "function"){
+// 				item.type = "function";
+// 			}
+// 		})
 // 	}
 
 // 	return output;
 // };
 
-//remove filter from array
-Filter.prototype.removeFilter = function(field, type, value){
-	var self = this;
+// //get all filters
+// // Filter.prototype.getHeaderFilters = function(){
+// // 	var self = this,
+// // 	output = [];
 
-	if(!Array.isArray(field)){
-		field = [{field:field, type:type, value:value}];
-	}
+// // 	for(var key in this.headerFilters){
+// // 		output.push({field:key, type:this.headerFilters[key].type, value:this.headerFilters[key].value});
+// // 	}
 
-	field.forEach(function(filter){
-		var index = -1;
+// // 	return output;
+// // };
 
-		if(typeof filter.field == "object"){
-			index = self.filterList.findIndex(function(element){
-				return filter === element;
-			});
-		}else{
-			index = self.filterList.findIndex(function(element){
-				return filter.field === element.field && filter.type === element.type  && filter.value === element.value
-			});
-		}
+// //remove filter from array
+// Filter.prototype.removeFilter = function(field, type, value){
+// 	var self = this;
 
-		if(index > -1){
-			self.filterList.splice(index, 1);
-			self.changed = true;
-		}else{
-			console.warn("Filter Error - No matching filter type found, ignoring: ", filter.type);
-		}
+// 	if(!Array.isArray(field)){
+// 		field = [{field:field, type:type, value:value}];
+// 	}
 
-	});
+// 	field.forEach(function(filter){
+// 		var index = -1;
 
-	if(this.table.options.persistentFilter && this.table.modExists("persistence", true)){
-		this.table.modules.persistence.save("filter");
-	}
+// 		if(typeof filter.field == "object"){
+// 			index = self.filterList.findIndex(function(element){
+// 				return filter === element;
+// 			});
+// 		}else{
+// 			index = self.filterList.findIndex(function(element){
+// 				return filter.field === element.field && filter.type === element.type  && filter.value === element.value
+// 			});
+// 		}
 
-};
+// 		if(index > -1){
+// 			self.filterList.splice(index, 1);
+// 			self.changed = true;
+// 		}else{
+// 			console.warn("Filter Error - No matching filter type found, ignoring: ", filter.type);
+// 		}
 
-//clear filters
-Filter.prototype.clearFilter = function(all){
-	this.filterList = [];
-
-	if(all){
-		this.clearHeaderFilter();
-	}
-
-	this.changed = true;
+// 	});
 
 // 	if(this.table.options.persistentFilter && this.table.modExists("persistence", true)){
 // 		this.table.modules.persistence.save("filter");
 // 	}
-};
 
-//clear header filters
-Filter.prototype.clearHeaderFilter = function(){
-	this.headerFilters = {};
+// };
 
-	this.headerFilterElements.forEach(function(element){
-		element.value = "";
-	});
+// //clear filters
+// Filter.prototype.clearFilter = function(all){
+// 	this.filterList = [];
 
-	this.changed = true;
-};
+// 	if(all){
+// 		this.clearHeaderFilter();
+// 	}
 
-//filter row array
-Filter.prototype.filter = function(rowList){
-	var self = this,
-	activeRows = [],
-	activeRowComponents = [];
+// 	this.changed = true;
 
-	if(self.table.options.dataFiltering){
-		self.table.options.dataFiltering.call(self.table, self.getFilters());
-	}
+// // 	if(this.table.options.persistentFilter && this.table.modExists("persistence", true)){
+// // 		this.table.modules.persistence.save("filter");
+// // 	}
+// };
 
-// 	if(!self.table.options.ajaxFiltering && (self.filterList.length || Object.keys(self.headerFilters).length)){
+// //clear header filters
+// Filter.prototype.clearHeaderFilter = function(){
+// 	this.headerFilters = {};
 
-// 		rowList.forEach(function(row){
-// 			if(self.filterRow(row)){
-// 				activeRows.push(row);
-// 			}
+// 	this.headerFilterElements.forEach(function(element){
+// 		element.value = "";
+// 	});
+
+// 	this.changed = true;
+// };
+
+// //filter row array
+// Filter.prototype.filter = function(rowList){
+// 	var self = this,
+// 	activeRows = [],
+// 	activeRowComponents = [];
+
+// 	if(self.table.options.dataFiltering){
+// 		self.table.options.dataFiltering.call(self.table, self.getFilters());
+// 	}
+
+// // 	if(!self.table.options.ajaxFiltering && (self.filterList.length || Object.keys(self.headerFilters).length)){
+
+// // 		rowList.forEach(function(row){
+// // 			if(self.filterRow(row)){
+// // 				activeRows.push(row);
+// // 			}
+// // 		});
+
+// // 	}else{
+// // 		activeRows = rowList.slice(0);
+// // 	}
+
+// 	if(self.table.options.dataFiltered){
+
+// 		activeRows.forEach(function(row){
+// 			activeRowComponents.push(row.getComponent());
 // 		});
 
-// 	}else{
-// 		activeRows = rowList.slice(0);
+// 		self.table.options.dataFiltered.call(self.table, self.getFilters(), activeRowComponents);
 // 	}
 
-	if(self.table.options.dataFiltered){
+// 	return activeRows;
 
-		activeRows.forEach(function(row){
-			activeRowComponents.push(row.getComponent());
-		});
+// };
 
-		self.table.options.dataFiltered.call(self.table, self.getFilters(), activeRowComponents);
-	}
+// //filter individual row
+// Filter.prototype.filterRow = function(row){
+// 	var self = this,
+// 	match = true,
+// 	data = row.getData();
 
-	return activeRows;
-
-};
-
-//filter individual row
-Filter.prototype.filterRow = function(row){
-	var self = this,
-	match = true,
-	data = row.getData();
-
-	self.filterList.forEach(function(filter){
-		if(!self.filterRecurse(filter, data)){
-			match = false;
-		}
-	});
-
-
-// 	for(var field in self.headerFilters){
-// 		if(!self.headerFilters[field].func(data)){
+// 	self.filterList.forEach(function(filter){
+// 		if(!self.filterRecurse(filter, data)){
 // 			match = false;
 // 		}
+// 	});
+
+
+// // 	for(var field in self.headerFilters){
+// // 		if(!self.headerFilters[field].func(data)){
+// // 			match = false;
+// // 		}
+// // 	}
+
+// 	return match;
+// };
+
+// Filter.prototype.filterRecurse = function(filter, data){
+// 	var self = this,
+// 	match = false;
+
+// 	if(Array.isArray(filter)){
+// 		filter.forEach(function(subFilter){
+// 			if(self.filterRecurse(subFilter, data)){
+// 				match = true;
+// 			}
+// 		});
+// 	}else{
+// 		match = filter.func(data);
 // 	}
 
-	return match;
-};
-
-Filter.prototype.filterRecurse = function(filter, data){
-	var self = this,
-	match = false;
-
-	if(Array.isArray(filter)){
-		filter.forEach(function(subFilter){
-			if(self.filterRecurse(subFilter, data)){
-				match = true;
-			}
-		});
-	}else{
-		match = filter.func(data);
-	}
-
-	return match;
-};
+// 	return match;
+// };
 
 
 
-//list of available filters
-Filter.prototype.filters ={
+// //list of available filters
+// Filter.prototype.filters ={
 
-	//equal to
-	"=":function(filterVal, rowVal){
-		return rowVal == filterVal ? true : false;
-	},
+// 	//equal to
+// 	"=":function(filterVal, rowVal){
+// 		return rowVal == filterVal ? true : false;
+// 	},
 
-	//less than
-	"<":function(filterVal, rowVal){
-		return rowVal < filterVal ? true : false;
-	},
+// 	//less than
+// 	"<":function(filterVal, rowVal){
+// 		return rowVal < filterVal ? true : false;
+// 	},
 
-	//less than or equal to
-	"<=":function(filterVal, rowVal){
-		return rowVal <= filterVal ? true : false;
-	},
+// 	//less than or equal to
+// 	"<=":function(filterVal, rowVal){
+// 		return rowVal <= filterVal ? true : false;
+// 	},
 
-	//greater than
-	">":function(filterVal, rowVal){
-		return rowVal > filterVal ? true : false;
-	},
+// 	//greater than
+// 	">":function(filterVal, rowVal){
+// 		return rowVal > filterVal ? true : false;
+// 	},
 
-	//greater than or equal to
-	">=":function(filterVal, rowVal){
-		return rowVal >= filterVal ? true : false;
-	},
+// 	//greater than or equal to
+// 	">=":function(filterVal, rowVal){
+// 		return rowVal >= filterVal ? true : false;
+// 	},
 
-	//not equal to
-	"!=":function(filterVal, rowVal){
-		return rowVal != filterVal ? true : false;
-	},
+// 	//not equal to
+// 	"!=":function(filterVal, rowVal){
+// 		return rowVal != filterVal ? true : false;
+// 	},
 
-	"regex":function(filterVal, rowVal){
+// 	"regex":function(filterVal, rowVal){
 
-		if(typeof filterVal == "string"){
-			filterVal = new RegExp(filterVal);
-		}
+// 		if(typeof filterVal == "string"){
+// 			filterVal = new RegExp(filterVal);
+// 		}
 
-		return filterVal.test(rowVal);
-	},
+// 		return filterVal.test(rowVal);
+// 	},
 
-	//contains the string
-	"like":function(filterVal, rowVal){
-		if(filterVal === null || typeof filterVal === "undefined"){
-			return rowVal === filterVal ? true : false;
-		}else{
-			if(typeof rowVal !== 'undefined' && rowVal !== null){
-				return String(rowVal).toLowerCase().indexOf(filterVal.toLowerCase()) > -1 ? true : false;
-			}
-			else{
-				return false;
-			}
-		}
-	},
+// 	//contains the string
+// 	"like":function(filterVal, rowVal){
+// 		if(filterVal === null || typeof filterVal === "undefined"){
+// 			return rowVal === filterVal ? true : false;
+// 		}else{
+// 			if(typeof rowVal !== 'undefined' && rowVal !== null){
+// 				return String(rowVal).toLowerCase().indexOf(filterVal.toLowerCase()) > -1 ? true : false;
+// 			}
+// 			else{
+// 				return false;
+// 			}
+// 		}
+// 	},
 
-	//in array
-	"in":function(filterVal, rowVal){
-		if(Array.isArray(filterVal)){
-			return filterVal.indexOf(rowVal) > -1;
-		}else{
-			console.warn("Filter Error - filter value is not an array:", filterVal);
-			return false;
-		}
-	},
-};
+// 	//in array
+// 	"in":function(filterVal, rowVal){
+// 		if(Array.isArray(filterVal)){
+// 			return filterVal.indexOf(rowVal) > -1;
+// 		}else{
+// 			console.warn("Filter Error - filter value is not an array:", filterVal);
+// 			return false;
+// 		}
+// 	},
+// };
 
-Tabulator.prototype.registerModule("filter", Filter);
+// Tabulator.prototype.registerModule("filter", Filter);
