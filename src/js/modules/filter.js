@@ -221,12 +221,12 @@ Filter.prototype.generateHeaderFilterElement = function(column, initialValue){
 
 			//update number filtered columns on change
 
-			column.modules.filter.attrType = editorElement.hasAttribute("type") ? editorElement.getAttribute("type").toLowerCase() : "" ;
-			if(column.modules.filter.attrType == "number"){
-				editorElement.addEventListener("change", function(e){
-					success(editorElement.value);
-				});
-			}
+// 			column.modules.filter.attrType = editorElement.hasAttribute("type") ? editorElement.getAttribute("type").toLowerCase() : "" ;
+// 			if(column.modules.filter.attrType == "number"){
+// 				editorElement.addEventListener("change", function(e){
+// 					success(editorElement.value);
+// 				});
+// 			}
 
 			//change text inputs to search inputs to allow for clearing of field
 			if(column.modules.filter.attrType == "text" && this.table.browser !== "ie"){
@@ -432,16 +432,16 @@ Filter.prototype.getFilters = function(all, ajax){
 };
 
 //get all filters
-Filter.prototype.getHeaderFilters = function(){
-	var self = this,
-	output = [];
+// Filter.prototype.getHeaderFilters = function(){
+// 	var self = this,
+// 	output = [];
 
-	for(var key in this.headerFilters){
-		output.push({field:key, type:this.headerFilters[key].type, value:this.headerFilters[key].value});
-	}
+// 	for(var key in this.headerFilters){
+// 		output.push({field:key, type:this.headerFilters[key].type, value:this.headerFilters[key].value});
+// 	}
 
-	return output;
-};
+// 	return output;
+// };
 
 //remove filter from array
 Filter.prototype.removeFilter = function(field, type, value){
@@ -489,9 +489,9 @@ Filter.prototype.clearFilter = function(all){
 
 	this.changed = true;
 
-	if(this.table.options.persistentFilter && this.table.modExists("persistence", true)){
-		this.table.modules.persistence.save("filter");
-	}
+// 	if(this.table.options.persistentFilter && this.table.modExists("persistence", true)){
+// 		this.table.modules.persistence.save("filter");
+// 	}
 };
 
 //clear header filters
@@ -515,17 +515,17 @@ Filter.prototype.filter = function(rowList){
 		self.table.options.dataFiltering.call(self.table, self.getFilters());
 	}
 
-	if(!self.table.options.ajaxFiltering && (self.filterList.length || Object.keys(self.headerFilters).length)){
+// 	if(!self.table.options.ajaxFiltering && (self.filterList.length || Object.keys(self.headerFilters).length)){
 
-		rowList.forEach(function(row){
-			if(self.filterRow(row)){
-				activeRows.push(row);
-			}
-		});
+// 		rowList.forEach(function(row){
+// 			if(self.filterRow(row)){
+// 				activeRows.push(row);
+// 			}
+// 		});
 
-	}else{
-		activeRows = rowList.slice(0);
-	}
+// 	}else{
+// 		activeRows = rowList.slice(0);
+// 	}
 
 	if(self.table.options.dataFiltered){
 
@@ -553,11 +553,11 @@ Filter.prototype.filterRow = function(row){
 	});
 
 
-	for(var field in self.headerFilters){
-		if(!self.headerFilters[field].func(data)){
-			match = false;
-		}
-	}
+// 	for(var field in self.headerFilters){
+// 		if(!self.headerFilters[field].func(data)){
+// 			match = false;
+// 		}
+// 	}
 
 	return match;
 };
